@@ -61,7 +61,7 @@ BEGIN
     NEW.raw_user_meta_data->>'avatar_url'
   );
 
-  IF lower(NEW.email) = 'shakesian6@gmail.com' THEN
+  IF lower(NEW.email) = 'shakesian@gmail.com' THEN
     INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'admin');
   ELSE
     INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'user');
