@@ -4,15 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { ListingCard, Listing } from "@/components/ListingCard";
 import { AddListingDialog } from "@/components/AddListingDialog";
 import { Card } from "@/components/ui/card";
+import { cacheGet, cacheSet } from "@/lib/offlineCache";
+import { useOnline } from "@/hooks/useOnline";
 
 const Page = ({ category, title, emoji }: { category: "marketplace" | "housing"; title: string; emoji: string }) => {
   const [items, setItems] = useState<Listing[]>([]);
+  const online = useOnline();
   useEffect(() => { document.title = `${title} — Camplink`; }, [title]);
   const load = async () => {
+    const cached = cacheGet<Listing[]>("listings:" + category);
+    if (cached) setItems(cached);
+    if (!online) return;
     const { data } = await supabase.from("listings").select("*").eq("category", category).order("created_at", { ascending: false });
-    setItems((data ?? []) as Listing[]);
+    const rows = (data ?? []) as Listing[];
+    setItems(rows);
+    cacheSet("listings:" + category, rows);
   };
-  useEffect(() => { load(); }, [category]);
+  useEffect(() => { load(); }, [category, online]);
 
   return (
     <AppShell>

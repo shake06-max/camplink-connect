@@ -8,23 +8,31 @@ import { ShoppingBag, Building2, Star, ArrowRight } from "lucide-react";
 import { ListingCard, Listing } from "@/components/ListingCard";
 import { AddListingDialog } from "@/components/AddListingDialog";
 import { Button } from "@/components/ui/button";
+import { cacheGet, cacheSet } from "@/lib/offlineCache";
+import { useOnline } from "@/hooks/useOnline";
 
 const Index = () => {
   const { user } = useAuth();
+  const online = useOnline();
   const [recent, setRecent] = useState<Listing[]>([]);
   const [name, setName] = useState("");
 
   useEffect(() => { document.title = "Camplink — Campus Marketplace"; }, []);
 
   const load = async () => {
+    const cached = cacheGet<Listing[]>("listings:recent");
+    if (cached) setRecent(cached);
+    if (!online) return;
     const { data } = await supabase.from("listings").select("*").order("created_at", { ascending: false }).limit(4);
-    setRecent((data ?? []) as Listing[]);
+    const rows = (data ?? []) as Listing[];
+    setRecent(rows);
+    cacheSet("listings:recent", rows);
     if (user) {
       const { data: p } = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
       setName(p?.display_name ?? user.email?.split("@")[0] ?? "");
     }
   };
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [user, online]);
 
   return (
     <AppShell>
