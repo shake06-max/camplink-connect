@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUpload } from "./ImageUpload";
 
 const schema = z.object({
   title: z.string().trim().min(2).max(120),
@@ -79,7 +80,10 @@ export const AddListingDialog = ({
           <div><Label>Price (KSh) *</Label><Input type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="800" /></div>
           <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Condition, details…" rows={3} /></div>
           <div><Label>Location</Label><Input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="Ruiru Town" /></div>
-          <div><Label>Image URL (optional)</Label><Input value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })} placeholder="https://…" /></div>
+          <div>
+            <Label>Photo</Label>
+            {user && <ImageUpload userId={user.id} value={form.image_url} onChange={(url) => setForm({ ...form, image_url: url })} />}
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <div><Label>Phone</Label><Input value={form.contact_phone} onChange={e => setForm({ ...form, contact_phone: e.target.value })} placeholder="+254…" /></div>
             <div><Label>Email</Label><Input value={form.contact_email} onChange={e => setForm({ ...form, contact_email: e.target.value })} /></div>

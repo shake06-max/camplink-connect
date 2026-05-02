@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, MessageCircle, Trash2 } from "lucide-react";
+import { Phone, Mail, MapPin, MessageCircle, Trash2, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +48,16 @@ export const ListingCard = ({ listing, onDelete }: { listing: Listing; onDelete?
     onDelete?.();
   };
 
+  const addToCart = async () => {
+    if (!user) return;
+    const { error } = await supabase.from("cart_items").upsert(
+      { user_id: user.id, listing_id: listing.id, quantity: 1 },
+      { onConflict: "user_id,listing_id" }
+    );
+    if (error) { toast.error(error.message); return; }
+    toast.success("Added to cart");
+  };
+
   return (
     <Card className="gradient-card border-border overflow-hidden transition-smooth hover:shadow-glow hover:-translate-y-0.5">
       <div className="aspect-[4/3] bg-secondary/40 grid place-items-center text-6xl">
@@ -65,6 +75,7 @@ export const ListingCard = ({ listing, onDelete }: { listing: Listing; onDelete?
           {listing.contact_phone && <Button size="sm" variant="outline" className="h-7 text-[11px]" asChild><a href={`tel:${listing.contact_phone}`}><Phone className="h-3 w-3 mr-1" />Call</a></Button>}
           {listing.contact_email && <Button size="sm" variant="outline" className="h-7 text-[11px]" asChild><a href={`mailto:${listing.contact_email}`}><Mail className="h-3 w-3 mr-1" />Email</a></Button>}
           {user && user.id !== listing.user_id && <Button size="sm" className="h-7 text-[11px] gradient-accent" onClick={startChat}><MessageCircle className="h-3 w-3 mr-1" />Chat</Button>}
+          {user && user.id !== listing.user_id && <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={addToCart}><ShoppingCart className="h-3 w-3 mr-1" />Cart</Button>}
           {canDelete && <Button size="sm" variant="ghost" className="h-7 text-[11px] text-destructive" onClick={remove}><Trash2 className="h-3 w-3" /></Button>}
         </div>
       </div>

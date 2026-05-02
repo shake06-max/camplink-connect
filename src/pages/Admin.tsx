@@ -3,8 +3,11 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Shield } from "lucide-react";
+import { Trash2, Shield, Send } from "lucide-react";
 import { toast } from "sonner";
 
 type Row = Record<string, any>;
@@ -13,6 +16,9 @@ const Admin = () => {
   const [listings, setListings] = useState<Row[]>([]);
   const [users, setUsers] = useState<Row[]>([]);
   const [reviews, setReviews] = useState<Row[]>([]);
+  const [bcTitle, setBcTitle] = useState("");
+  const [bcBody, setBcBody] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => { document.title = "Admin — Camplink"; }, []);
 
@@ -32,9 +38,27 @@ const Admin = () => {
     if (error) toast.error(error.message); else { toast.success("Deleted"); load(); }
   };
 
+  const broadcast = async () => {
+    if (!bcTitle.trim()) { toast.error("Title required"); return; }
+    setSending(true);
+    const rows = users.map(u => ({ user_id: u.id, title: bcTitle.trim(), body: bcBody.trim() || null, type: "admin_broadcast" }));
+    const { error } = await supabase.from("notifications").insert(rows);
+    setSending(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Sent to ${rows.length} users`);
+    setBcTitle(""); setBcBody("");
+  };
+
   return (
     <AppShell>
       <div className="flex items-center gap-2 mb-4"><Shield className="h-6 w-6 text-accent" /><h1 className="text-2xl font-extrabold">Admin Panel</h1></div>
+
+      <Card className="gradient-card p-4 mb-4 space-y-2">
+        <p className="font-semibold text-sm flex items-center gap-2"><Send className="h-4 w-4" />Broadcast notification 🔔</p>
+        <div><Label className="text-xs">Title</Label><Input value={bcTitle} onChange={e => setBcTitle(e.target.value)} placeholder="Announcement" /></div>
+        <div><Label className="text-xs">Message</Label><Textarea value={bcBody} onChange={e => setBcBody(e.target.value)} placeholder="What's the news?" rows={2} /></div>
+        <Button className="gradient-accent w-full" onClick={broadcast} disabled={sending}>Send to all users</Button>
+      </Card>
 
       <Tabs defaultValue="listings">
         <TabsList className="grid grid-cols-3 w-full">
