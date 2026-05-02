@@ -1,0 +1,33 @@
+import { NavLink } from "react-router-dom";
+import { Home, ShoppingBag, Building2, Star, MessageCircle, User } from "lucide-react";
+
+const items = [
+  { to: "/", label: "Home", icon: Home, end: true },
+  { to: "/market", label: "Market", icon: ShoppingBag },
+  { to: "/housing", label: "Housing", icon: Building2 },
+  { to: "/reviews", label: "Reviews", icon: Star },
+  { to: "/chat", label: "Chat", icon: MessageCircle },
+  { to: "/profile", label: "Profile", icon: User },
+];
+
+export const BottomNav = () => (
+  <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg">
+    <div className="mx-auto grid max-w-2xl grid-cols-6">
+      {items.map(({ to, label, icon: Icon, end }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          className={({ isActive }) =>
+            `flex flex-col items-center gap-1 py-2.5 text-xs transition-smooth ${
+              isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            }`
+          }
+        >
+          <Icon className="h-5 w-5" />
+          <span className="text-[10px] font-medium">{label}</span>
+        </NavLink>
+      ))}
+    </div>
+  </nav>
+);

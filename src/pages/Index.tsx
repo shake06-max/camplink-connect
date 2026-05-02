@@ -1,16 +1,64 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { AppShell } from "@/components/AppShell";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { ShoppingBag, Building2, Star, ArrowRight } from "lucide-react";
+import { ListingCard, Listing } from "@/components/ListingCard";
+import { AddListingDialog } from "@/components/AddListingDialog";
+import { Button } from "@/components/ui/button";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const { user } = useAuth();
+  const [recent, setRecent] = useState<Listing[]>([]);
+  const [name, setName] = useState("");
+
+  useEffect(() => { document.title = "Camplink — Campus Marketplace"; }, []);
+
+  const load = async () => {
+    const { data } = await supabase.from("listings").select("*").order("created_at", { ascending: false }).limit(4);
+    setRecent((data ?? []) as Listing[]);
+    if (user) {
+      const { data: p } = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
+      setName(p?.display_name ?? user.email?.split("@")[0] ?? "");
+    }
+  };
+  useEffect(() => { load(); }, [user]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <AppShell>
+      <section className="rounded-3xl gradient-hero p-6 shadow-glow mb-6">
+        <p className="text-white/90 text-sm font-medium">Hey {name || "there"} 👋</p>
+        <h1 className="text-white text-3xl font-extrabold leading-tight mt-1">What are you<br />looking for today?</h1>
+        <div className="grid grid-cols-3 gap-2 mt-5">
+          <Link to="/market"><Card className="bg-white/15 backdrop-blur border-white/20 p-3 text-center hover:bg-white/25 transition-smooth"><ShoppingBag className="h-6 w-6 mx-auto text-white mb-1" /><p className="text-xs font-semibold text-white">Marketplace</p></Card></Link>
+          <Link to="/housing"><Card className="bg-white/15 backdrop-blur border-white/20 p-3 text-center hover:bg-white/25 transition-smooth"><Building2 className="h-6 w-6 mx-auto text-white mb-1" /><p className="text-xs font-semibold text-white">Housing</p></Card></Link>
+          <Link to="/reviews"><Card className="bg-white/15 backdrop-blur border-white/20 p-3 text-center hover:bg-white/25 transition-smooth"><Star className="h-6 w-6 mx-auto text-white mb-1" /><p className="text-xs font-semibold text-white">Reviews</p></Card></Link>
+        </div>
+      </section>
+
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-xl font-bold">Recent Listings</h2>
+        <Link to="/market" className="text-sm text-primary flex items-center gap-1">See all <ArrowRight className="h-3 w-3" /></Link>
+      </div>
+
+      {recent.length === 0 ? (
+        <Card className="p-8 text-center gradient-card">
+          <p className="text-muted-foreground mb-3">No listings yet — be the first!</p>
+          <AddListingDialog onCreated={load} />
+        </Card>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          {recent.map(l => <ListingCard key={l.id} listing={l} onDelete={load} />)}
+        </div>
+      )}
+
+      <div className="fixed bottom-24 right-4 z-40">
+        <AddListingDialog onCreated={load} trigger={<Button size="lg" className="rounded-full h-14 w-14 p-0 gradient-accent shadow-glow"><span className="text-2xl leading-none">+</span></Button>} />
+      </div>
+    </AppShell>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
