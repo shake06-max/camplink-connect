@@ -70,6 +70,51 @@ export type Database = {
         }
         Relationships: []
       }
+      dating_profiles: {
+        Row: {
+          age: number | null
+          bio: string | null
+          created_at: string
+          display_name: string
+          gender: string | null
+          id: string
+          interests: string | null
+          is_active: boolean
+          looking_for: string | null
+          photo_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          bio?: string | null
+          created_at?: string
+          display_name: string
+          gender?: string | null
+          id?: string
+          interests?: string | null
+          is_active?: boolean
+          looking_for?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          gender?: string | null
+          id?: string
+          interests?: string | null
+          is_active?: boolean
+          looking_for?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           category: Database["public"]["Enums"]["listing_category"]
@@ -191,6 +236,7 @@ export type Database = {
           email: string | null
           id: string
           phone: string | null
+          suspended: boolean
           updated_at: string
         }
         Insert: {
@@ -200,6 +246,7 @@ export type Database = {
           email?: string | null
           id: string
           phone?: string | null
+          suspended?: boolean
           updated_at?: string
         }
         Update: {
@@ -209,6 +256,7 @@ export type Database = {
           email?: string | null
           id?: string
           phone?: string | null
+          suspended?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -281,6 +329,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_suspended: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
