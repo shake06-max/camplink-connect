@@ -87,6 +87,9 @@ const Auth = () => {
               {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {tab === "signin" ? "Sign in" : "Create account"}
             </Button>
+            {tab === "signin" && (
+              <a href="/forgot-password" className="block text-center text-xs text-muted-foreground hover:text-primary">Forgot password?</a>
+            )}
           </div>
         </Tabs>
 
