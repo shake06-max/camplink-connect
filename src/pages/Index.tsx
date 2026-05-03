@@ -36,9 +36,11 @@ const Index = () => {
 
   return (
     <AppShell>
-      <section className="rounded-3xl gradient-hero p-6 shadow-glow mb-6">
+      <section className="relative overflow-hidden rounded-3xl gradient-hero p-6 shadow-neon mb-6">
+        <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-fuchsia-400/40 blur-3xl animate-neon-float" />
+        <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-violet-400/40 blur-3xl animate-neon-float [animation-delay:-3s]" />
         <p className="text-white/90 text-sm font-medium">Hey {name || "there"} 👋</p>
-        <h1 className="text-white text-3xl font-extrabold leading-tight mt-1">What are you<br />looking for today?</h1>
+        <h1 className="text-white text-3xl font-extrabold leading-tight mt-1 neon-glow-text">What are you<br />looking for today?</h1>
         <div className="grid grid-cols-2 gap-2 mt-5">
           <Link to="/market"><Card className="bg-white/15 backdrop-blur border-white/20 p-3 text-center hover:bg-white/25 transition-smooth"><ShoppingBag className="h-6 w-6 mx-auto text-white mb-1" /><p className="text-xs font-semibold text-white">Marketplace</p></Card></Link>
           <Link to="/housing"><Card className="bg-white/15 backdrop-blur border-white/20 p-3 text-center hover:bg-white/25 transition-smooth"><Building2 className="h-6 w-6 mx-auto text-white mb-1" /><p className="text-xs font-semibold text-white">Housing</p></Card></Link>
@@ -70,4 +72,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Index;      
