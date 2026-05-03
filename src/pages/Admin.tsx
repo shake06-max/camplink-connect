@@ -1,18 +1,22 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Shield, Send } from "lucide-react";
+import { Trash2, Shield, Send, Ban, CheckCircle2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 type Row = Record<string, any>;
 
 const Admin = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [listings, setListings] = useState<Row[]>([]);
   const [users, setUsers] = useState<Row[]>([]);
   const [reviews, setReviews] = useState<Row[]>([]);
@@ -49,6 +53,42 @@ const Admin = () => {
     setBcTitle(""); setBcBody("");
   };
 
+  const toggleSuspend = async (u: Row) => {
+    const next = !u.suspended;
+    const { error } = await supabase.from("profiles").update({ suspended: next }).eq("id", u.id);
+    if (error) { toast.error(error.message); return; }
+    await supabase.from("notifications").insert({
+      user_id: u.id,
+      title: next ? "Account suspended" : "Account reinstated",
+      body: next ? "An admin suspended your account." : "An admin restored your account.",
+      type: "admin_action",
+    });
+    toast.success(next ? "Suspended" : "Reinstated");
+    load();
+  };
+
+  const removeUser = async (u: Row) => {
+    if (u.id === user?.id) { toast.error("Don't delete yourself!"); return; }
+    if (!confirm(`Permanently delete ${u.email}?`)) return;
+    const { error } = await supabase.functions.invoke("delete-user", { body: { target_user_id: u.id } });
+    if (error) { toast.error(error.message); return; }
+    toast.success("User deleted");
+    load();
+  };
+
+  const dmUser = async (u: Row) => {
+    if (!user || u.id === user.id) return;
+    const [a, b] = [user.id, u.id].sort();
+    const { data: existing } = await supabase.from("conversations").select("id").or(`and(user_a.eq.${a},user_b.eq.${b}),and(user_a.eq.${b},user_b.eq.${a})`).maybeSingle();
+    let cid = existing?.id;
+    if (!cid) {
+      const { data, error } = await supabase.from("conversations").insert({ user_a: a, user_b: b }).select("id").single();
+      if (error) { toast.error(error.message); return; }
+      cid = data.id;
+    }
+    navigate(`/chat?c=${cid}`);
+  };
+
   return (
     <AppShell>
       <div className="flex items-center gap-2 mb-4"><Shield className="h-6 w-6 text-accent" /><h1 className="text-2xl font-extrabold">Admin Panel</h1></div>
@@ -60,12 +100,38 @@ const Admin = () => {
         <Button className="gradient-accent w-full" onClick={broadcast} disabled={sending}>Send to all users</Button>
       </Card>
 
-      <Tabs defaultValue="listings">
+      <Tabs defaultValue="users">
         <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="listings">Listings ({listings.length})</TabsTrigger>
           <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
+          <TabsTrigger value="listings">Listings ({listings.length})</TabsTrigger>
           <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="users" className="space-y-2 mt-3">
+          {users.map(u => (
+            <Card key={u.id} className="p-3 gradient-card">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm truncate">{u.display_name ?? "—"} {u.suspended && <span className="text-destructive text-[10px] ml-1">SUSPENDED</span>}</p>
+                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                  {u.phone && <p className="text-xs text-muted-foreground">{u.phone}</p>}
+                </div>
+              </div>
+              <div className="flex gap-1 mt-2">
+                <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => dmUser(u)} disabled={u.id === user?.id}>
+                  <MessageCircle className="h-3 w-3 mr-1" />DM
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => toggleSuspend(u)} disabled={u.id === user?.id}>
+                  {u.suspended ? <CheckCircle2 className="h-3 w-3 mr-1" /> : <Ban className="h-3 w-3 mr-1" />}
+                  {u.suspended ? "Unsuspend" : "Suspend"}
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1 h-8 text-xs text-destructive" onClick={() => removeUser(u)} disabled={u.id === user?.id}>
+                  <Trash2 className="h-3 w-3 mr-1" />Delete
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </TabsContent>
 
         <TabsContent value="listings" className="space-y-2 mt-3">
           {listings.map(l => (
@@ -75,16 +141,6 @@ const Admin = () => {
                 <p className="text-xs text-muted-foreground">{l.category} · KSh {l.price}</p>
               </div>
               <Button size="sm" variant="ghost" className="text-destructive" onClick={() => del("listings", l.id)}><Trash2 className="h-4 w-4" /></Button>
-            </Card>
-          ))}
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-2 mt-3">
-          {users.map(u => (
-            <Card key={u.id} className="p-3 gradient-card">
-              <p className="font-semibold text-sm">{u.display_name ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">{u.email}</p>
-              {u.phone && <p className="text-xs text-muted-foreground">{u.phone}</p>}
             </Card>
           ))}
         </TabsContent>

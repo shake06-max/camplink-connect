@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import { Logo } from "./Logo";
 import { BottomNav } from "./BottomNav";
 import { useAuth } from "@/hooks/useAuth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "./NotificationBell";
 import { OfflineBanner } from "./OfflineBanner";
 import { useCartCount } from "@/hooks/useCartCount";
@@ -14,7 +16,13 @@ import { Badge } from "@/components/ui/badge";
 export const AppShell = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const cartCount = useCartCount();
+  const [avatar, setAvatar] = useState<string | null>(null);
   const initials = (user?.email ?? "U").slice(0, 2).toUpperCase();
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle()
+      .then(({ data }) => setAvatar(data?.avatar_url ?? null));
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -36,6 +44,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
             </Link>
             <Link to="/profile">
               <Avatar className="h-9 w-9 border border-border ml-1">
+                {avatar && <AvatarImage src={avatar} alt="me" />}
                 <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">{initials}</AvatarFallback>
               </Avatar>
             </Link>

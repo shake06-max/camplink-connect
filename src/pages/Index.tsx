@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { ShoppingBag, Building2, Star, ArrowRight } from "lucide-react";
+import { ShoppingBag, Building2, Star, ArrowRight, Heart } from "lucide-react";
 import { ListingCard, Listing } from "@/components/ListingCard";
 import { AddListingDialog } from "@/components/AddListingDialog";
 import { Button } from "@/components/ui/button";
@@ -39,9 +39,10 @@ const Index = () => {
       <section className="rounded-3xl gradient-hero p-6 shadow-glow mb-6">
         <p className="text-white/90 text-sm font-medium">Hey {name || "there"} 👋</p>
         <h1 className="text-white text-3xl font-extrabold leading-tight mt-1">What are you<br />looking for today?</h1>
-        <div className="grid grid-cols-3 gap-2 mt-5">
+        <div className="grid grid-cols-2 gap-2 mt-5">
           <Link to="/market"><Card className="bg-white/15 backdrop-blur border-white/20 p-3 text-center hover:bg-white/25 transition-smooth"><ShoppingBag className="h-6 w-6 mx-auto text-white mb-1" /><p className="text-xs font-semibold text-white">Marketplace</p></Card></Link>
           <Link to="/housing"><Card className="bg-white/15 backdrop-blur border-white/20 p-3 text-center hover:bg-white/25 transition-smooth"><Building2 className="h-6 w-6 mx-auto text-white mb-1" /><p className="text-xs font-semibold text-white">Housing</p></Card></Link>
+          <Link to="/dating"><Card className="bg-white/15 backdrop-blur border-white/20 p-3 text-center hover:bg-white/25 transition-smooth"><Heart className="h-6 w-6 mx-auto text-white mb-1" /><p className="text-xs font-semibold text-white">Hookup 💖</p></Card></Link>
           <Link to="/reviews"><Card className="bg-white/15 backdrop-blur border-white/20 p-3 text-center hover:bg-white/25 transition-smooth"><Star className="h-6 w-6 mx-auto text-white mb-1" /><p className="text-xs font-semibold text-white">Reviews</p></Card></Link>
         </div>
       </section>
