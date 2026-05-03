@@ -1,18 +1,17 @@
 import { NavLink } from "react-router-dom";
-import { Home, ShoppingBag, Building2, Star, MessageCircle, User } from "lucide-react";
+import { Home, ShoppingBag, Heart, MessageCircle, User } from "lucide-react";
 
 const items = [
   { to: "/", label: "Home", icon: Home, end: true },
   { to: "/market", label: "Market", icon: ShoppingBag },
-  { to: "/housing", label: "Housing", icon: Building2 },
-  { to: "/reviews", label: "Reviews", icon: Star },
+  { to: "/dating", label: "Hookup", icon: Heart },
   { to: "/chat", label: "Chat", icon: MessageCircle },
   { to: "/profile", label: "Profile", icon: User },
 ];
 
 export const BottomNav = () => (
   <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg">
-    <div className="mx-auto grid max-w-2xl grid-cols-6">
+    <div className="mx-auto grid max-w-2xl grid-cols-5">
       {items.map(({ to, label, icon: Icon, end }) => (
         <NavLink
           key={to}
