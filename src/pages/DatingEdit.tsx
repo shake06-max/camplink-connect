@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { AvatarUpload } from "@/components/AvatarUpload";
+import { MultiImageUpload } from "@/components/MultiImageUpload";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
@@ -28,6 +29,7 @@ const DatingEdit = () => {
   const [bio, setBio] = useState("");
   const [interests, setInterests] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [active, setActive] = useState(true);
 
   useEffect(() => { document.title = "My Dating Profile — Camplink"; }, []);
@@ -45,6 +47,7 @@ const DatingEdit = () => {
         setBio(data.bio ?? "");
         setInterests(data.interests ?? "");
         setPhoto(data.photo_url);
+        setPhotos(((data as any).photos ?? []) as string[]);
         setActive(data.is_active);
       } else {
         const { data: p } = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
@@ -66,9 +69,10 @@ const DatingEdit = () => {
       looking_for: lookingFor || null,
       bio: bio.trim().slice(0, 500) || null,
       interests: interests.trim().slice(0, 200) || null,
-      photo_url: photo,
+      photo_url: photo ?? photos[0] ?? null,
+      photos,
       is_active: active,
-    };
+    } as any;
     const { error } = exists
       ? await supabase.from("dating_profiles").update(payload).eq("user_id", user.id)
       : await supabase.from("dating_profiles").insert(payload);
@@ -92,6 +96,12 @@ const DatingEdit = () => {
       <h1 className="text-2xl font-extrabold mb-4">💖 My Dating Profile</h1>
       <Card className="p-4 gradient-card space-y-4">
         <AvatarUpload userId={user!.id} value={photo} fallback={(displayName || "U").slice(0,2).toUpperCase()} onChange={setPhoto} size={96} />
+
+        <div>
+          <Label>More photos (up to 6)</Label>
+          <p className="text-[10px] text-muted-foreground mb-2">Add 2 or more photos so others can swipe through your gallery.</p>
+          <MultiImageUpload userId={user!.id} bucket="avatars" values={photos} onChange={setPhotos} max={6} />
+        </div>
 
         <div><Label>Display name</Label><Input value={displayName} onChange={e => setDisplayName(e.target.value)} maxLength={60} /></div>
 

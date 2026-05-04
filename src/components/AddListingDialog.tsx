@@ -10,17 +10,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { ImageUpload } from "./ImageUpload";
+import { MultiImageUpload } from "./MultiImageUpload";
+import { VideoUpload } from "./VideoUpload";
+
+export const SUBCATEGORIES = [
+  "Textbooks", "Electronics", "Furniture", "Clothing", "Services", "Tickets", "Housing", "Other",
+] as const;
 
 const schema = z.object({
   title: z.string().trim().min(2).max(120),
   description: z.string().trim().max(2000).optional(),
   price: z.coerce.number().min(0).max(100000000),
   category: z.enum(["marketplace", "housing"]),
+  subcategory: z.string().max(40).optional(),
   contact_phone: z.string().trim().max(30).optional(),
   contact_email: z.string().trim().email().max(255).optional().or(z.literal("")),
   location: z.string().trim().max(120).optional(),
-  image_url: z.string().trim().url().max(2000).optional().or(z.literal("")),
 });
 
 export const AddListingDialog = ({
@@ -29,15 +34,19 @@ export const AddListingDialog = ({
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [video, setVideo] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: "", description: "", price: "", category: defaultCategory,
-    contact_phone: "", contact_email: user?.email ?? "", location: "", image_url: "",
+    subcategory: defaultCategory === "housing" ? "Housing" : "Other",
+    contact_phone: "", contact_email: user?.email ?? "", location: "",
   });
 
   const submit = async () => {
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     if (!user) return;
+    if (photos.length < 1) { toast.error("Add at least 1 photo (up to 3 recommended)"); return; }
     setBusy(true);
     const { error } = await supabase.from("listings").insert({
       user_id: user.id,
@@ -45,16 +54,20 @@ export const AddListingDialog = ({
       description: parsed.data.description || null,
       price: parsed.data.price,
       category: parsed.data.category,
+      subcategory: parsed.data.subcategory || null,
       contact_phone: parsed.data.contact_phone || null,
       contact_email: parsed.data.contact_email || null,
       location: parsed.data.location || null,
-      image_url: parsed.data.image_url || null,
+      image_url: photos[0] ?? null,
+      photos,
+      video_url: video,
     });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Listing posted!");
     setOpen(false);
-    setForm({ ...form, title: "", description: "", price: "", location: "", image_url: "" });
+    setPhotos([]); setVideo(null);
+    setForm({ ...form, title: "", description: "", price: "", location: "" });
     onCreated?.();
   };
 
@@ -68,7 +81,7 @@ export const AddListingDialog = ({
         <div className="space-y-3">
           <div>
             <Label>Category</Label>
-            <Select value={form.category} onValueChange={(v: any) => setForm({ ...form, category: v })}>
+            <Select value={form.category} onValueChange={(v: any) => setForm({ ...form, category: v, subcategory: v === "housing" ? "Housing" : "Other" })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="marketplace">Marketplace</SelectItem>
@@ -76,13 +89,28 @@ export const AddListingDialog = ({
               </SelectContent>
             </Select>
           </div>
+          {form.category === "marketplace" && (
+            <div>
+              <Label>Type</Label>
+              <Select value={form.subcategory} onValueChange={(v) => setForm({ ...form, subcategory: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SUBCATEGORIES.filter(s => s !== "Housing").map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Scientific Calculator FX-991" /></div>
           <div><Label>Price (KSh) *</Label><Input type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="800" /></div>
           <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Condition, details…" rows={3} /></div>
           <div><Label>Location</Label><Input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="Ruiru Town" /></div>
           <div>
-            <Label>Photo</Label>
-            {user && <ImageUpload userId={user.id} value={form.image_url} onChange={(url) => setForm({ ...form, image_url: url })} />}
+            <Label>Photos (2–3 recommended)</Label>
+            {user && <MultiImageUpload userId={user.id} values={photos} onChange={setPhotos} max={5} />}
+          </div>
+          <div>
+            <Label>Video (optional)</Label>
+            {user && <VideoUpload userId={user.id} value={video} onChange={setVideo} />}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div><Label>Phone</Label><Input value={form.contact_phone} onChange={e => setForm({ ...form, contact_phone: e.target.value })} placeholder="+254…" /></div>

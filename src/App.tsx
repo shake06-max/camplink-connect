@@ -17,6 +17,7 @@ import Admin from "./pages/Admin.tsx";
 import Cart from "./pages/Cart.tsx";
 import Dating from "./pages/Dating.tsx";
 import DatingEdit from "./pages/DatingEdit.tsx";
+import Community from "./pages/Community.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
             <Route path="/dating" element={<ProtectedRoute><Dating /></ProtectedRoute>} />
             <Route path="/dating/edit" element={<ProtectedRoute><DatingEdit /></ProtectedRoute>} />
+            <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

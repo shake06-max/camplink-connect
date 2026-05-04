@@ -46,6 +46,45 @@ export type Database = {
           },
         ]
       }
+      community_posts: {
+        Row: {
+          body: string | null
+          contact: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          kind: string
+          location: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          contact?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          kind?: string
+          location?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          contact?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          kind?: string
+          location?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
@@ -82,6 +121,7 @@ export type Database = {
           is_active: boolean
           looking_for: string | null
           photo_url: string | null
+          photos: string[]
           updated_at: string
           user_id: string
         }
@@ -96,6 +136,7 @@ export type Database = {
           is_active?: boolean
           looking_for?: string | null
           photo_url?: string | null
+          photos?: string[]
           updated_at?: string
           user_id: string
         }
@@ -110,6 +151,7 @@ export type Database = {
           is_active?: boolean
           looking_for?: string | null
           photo_url?: string | null
+          photos?: string[]
           updated_at?: string
           user_id?: string
         }
@@ -126,10 +168,13 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           location: string | null
+          photos: string[]
           price: number
+          subcategory: string | null
           title: string
           updated_at: string
           user_id: string
+          video_url: string | null
         }
         Insert: {
           category?: Database["public"]["Enums"]["listing_category"]
@@ -141,10 +186,13 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           location?: string | null
+          photos?: string[]
           price?: number
+          subcategory?: string | null
           title: string
           updated_at?: string
           user_id: string
+          video_url?: string | null
         }
         Update: {
           category?: Database["public"]["Enums"]["listing_category"]
@@ -156,10 +204,13 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           location?: string | null
+          photos?: string[]
           price?: number
+          subcategory?: string | null
           title?: string
           updated_at?: string
           user_id?: string
+          video_url?: string | null
         }
         Relationships: []
       }
