@@ -9,11 +9,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, MessageCircle, Search, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { PhotoLightbox } from "@/components/PhotoLightbox";
 
 type DP = {
   id: string; user_id: string; display_name: string;
   age: number | null; gender: string | null; looking_for: string | null;
   bio: string | null; interests: string | null; photo_url: string | null;
+  photos?: string[] | null;
 };
 
 const Dating = () => {
@@ -22,6 +24,7 @@ const Dating = () => {
   const [profiles, setProfiles] = useState<DP[]>([]);
   const [q, setQ] = useState("");
   const [hasOwn, setHasOwn] = useState<boolean | null>(null);
+  const [viewing, setViewing] = useState<{ photos: string[]; open: boolean }>({ photos: [], open: false });
 
   useEffect(() => { document.title = "Hookup — Camplink"; }, []);
 
@@ -77,19 +80,24 @@ const Dating = () => {
         <Card className="p-8 text-center gradient-card text-muted-foreground">No matches found.</Card>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          {filtered.map(p => (
+          {filtered.map(p => {
+            const gallery = (p.photos && p.photos.length ? p.photos : (p.photo_url ? [p.photo_url] : []));
+            return (
             <Card key={p.id} className="overflow-hidden gradient-card hover:shadow-glow transition-smooth">
-              <div className="aspect-[3/4] bg-secondary relative">
-                {p.photo_url ? (
-                  <img src={p.photo_url} alt={p.display_name} className="w-full h-full object-cover" />
+              <button type="button" className="aspect-[3/4] bg-secondary relative w-full" onClick={() => gallery.length && setViewing({ photos: gallery, open: true })}>
+                {gallery[0] ? (
+                  <img src={gallery[0]} alt={p.display_name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full grid place-items-center"><Avatar className="h-20 w-20"><AvatarFallback className="text-2xl bg-primary/20 text-primary">{p.display_name.slice(0,2).toUpperCase()}</AvatarFallback></Avatar></div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                {gallery.length > 1 && (
+                  <span className="absolute top-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">📷 {gallery.length}</span>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left">
                   <p className="text-white font-bold text-sm truncate">{p.display_name}{p.age ? `, ${p.age}` : ""}</p>
                   {p.gender && <p className="text-white/80 text-[10px]">{p.gender}{p.looking_for ? ` · seeks ${p.looking_for}` : ""}</p>}
                 </div>
-              </div>
+              </button>
               <div className="p-2 space-y-1">
                 {p.bio && <p className="text-xs text-muted-foreground line-clamp-2">{p.bio}</p>}
                 {p.interests && <p className="text-[10px] text-primary truncate">❤ {p.interests}</p>}
@@ -98,9 +106,10 @@ const Dating = () => {
                 </Button>
               </div>
             </Card>
-          ))}
+          );})}
         </div>
       )}
+      <PhotoLightbox photos={viewing.photos} open={viewing.open} onOpenChange={(o) => setViewing(v => ({ ...v, open: o }))} />
     </AppShell>
   );
 };
