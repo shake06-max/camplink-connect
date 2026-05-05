@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trash2, Shield, Send, Ban, CheckCircle2, MessageCircle } from "lucide-react";
+import { ThemeEditor } from "@/components/ThemeEditor";
 import { toast } from "sonner";
 
 type Row = Record<string, any>;
@@ -92,6 +93,8 @@ const Admin = () => {
   return (
     <AppShell>
       <div className="flex items-center gap-2 mb-4"><Shield className="h-6 w-6 text-accent" /><h1 className="text-2xl font-extrabold">Admin Panel</h1></div>
+
+      <ThemeEditor />
 
       <Card className="gradient-card p-4 mb-4 space-y-2">
         <p className="font-semibold text-sm flex items-center gap-2"><Send className="h-4 w-4" />Broadcast notification 🔔</p>
