@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { AvatarUpload } from "@/components/AvatarUpload";
-import { LogOut, Shield, Trash2 } from "lucide-react";
+import { LogOut, Shield, Trash2, Smartphone } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { isMobile, isMobileNotifyEnabled, setMobileNotifyEnabled } from "@/lib/mobileNotifications";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -19,6 +21,7 @@ const Profile = () => {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [suspended, setSuspended] = useState(false);
 
+  const [mobileNotify, setMobileNotify] = useState(isMobileNotifyEnabled());
   useEffect(() => { document.title = "Profile — Camplink"; }, []);
 
   useEffect(() => {
@@ -77,6 +80,17 @@ const Profile = () => {
       {isAdmin && (
         <Link to="/admin"><Card className="p-4 gradient-card mt-3 hover:shadow-glow transition-smooth flex items-center gap-3"><Shield className="h-5 w-5 text-accent" /><span className="font-semibold">Open Admin Panel</span></Card></Link>
       )}
+
+      <Card className="p-4 gradient-card mt-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Smartphone className="h-4 w-4 text-accent" />
+          <div>
+            <p className="text-sm font-semibold">Mobile notifications</p>
+            <p className="text-[11px] text-muted-foreground">Vibration + sound on your phone {isMobile() ? "" : "(mobile only)"}</p>
+          </div>
+        </div>
+        <Switch checked={mobileNotify} onCheckedChange={(v) => { setMobileNotify(v); setMobileNotifyEnabled(v); }} />
+      </Card>
 
       <Card className="p-4 gradient-card mt-3">
         <p className="text-xs text-muted-foreground mb-2">App contact</p>

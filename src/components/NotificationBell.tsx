@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { requestNotificationPermission, showBrowserNotification } from "@/lib/browserNotifications";
+import { showMobileNotification } from "@/lib/mobileNotifications";
 
 type Notification = {
   id: string;
@@ -50,6 +51,7 @@ export const NotificationBell = () => {
           setItems((prev) => [n, ...prev]);
           toast(n.title, { description: n.body ?? undefined });
           showBrowserNotification(n.title, n.body ?? undefined, n.link ?? undefined);
+          showMobileNotification(n.title, n.body ?? undefined, n.link ?? undefined);
         }
       )
       .subscribe();
