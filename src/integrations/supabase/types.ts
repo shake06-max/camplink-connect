@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      anon_responses: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          survey_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          survey_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anon_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "anon_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anon_surveys: {
+        Row: {
+          created_at: string
+          id: string
+          prompt: string | null
+          slug: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prompt?: string | null
+          slug?: string
+          title?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prompt?: string | null
+          slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          id: number
+          theme: Json
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          theme?: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          theme?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string
@@ -153,6 +227,57 @@ export type Database = {
           photo_url?: string | null
           photos?: string[]
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dating_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          profile_user_id: string
+          reaction: string
+          reactor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_user_id: string
+          reaction: string
+          reactor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_user_id?: string
+          reaction?: string
+          reactor_id?: string
+        }
+        Relationships: []
+      }
+      listing_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          listing_id: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          listing_id: string
+          rating: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string
+          rating?: number
           user_id?: string
         }
         Relationships: []
