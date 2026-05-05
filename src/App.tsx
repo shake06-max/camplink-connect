@@ -18,6 +18,8 @@ import Cart from "./pages/Cart.tsx";
 import Dating from "./pages/Dating.tsx";
 import DatingEdit from "./pages/DatingEdit.tsx";
 import Community from "./pages/Community.tsx";
+import Anon from "./pages/Anon.tsx";
+import { ThemeProvider } from "./components/ThemeProvider";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -28,8 +30,10 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ThemeProvider>
         <AuthProvider>
           <Routes>
+            <Route path="/anon" element={<Anon />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -47,6 +51,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
+        </ThemeProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
