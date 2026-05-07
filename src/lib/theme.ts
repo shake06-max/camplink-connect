@@ -51,7 +51,18 @@ export const applyTheme = (theme: ThemeMap | null) => {
   if (!theme) return;
   const root = document.documentElement;
   Object.entries(theme).forEach(([k, v]) => {
-    if (v) root.style.setProperty(`--${k}`, v);
+    if (!v) return;
+    if (k === "favicon-url") {
+      let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "icon";
+        document.head.appendChild(link);
+      }
+      link.href = v;
+      return;
+    }
+    root.style.setProperty(`--${k}`, v);
   });
 };
 
