@@ -101,6 +101,26 @@ const Dating = () => {
     load();
   };
 
+  const adminDeleteProfile = async (p: DP) => {
+    if (!isAdmin) return;
+    if (!confirm(`Delete ${p.display_name}'s entire dating profile?`)) return;
+    const { error } = await supabase.from("dating_profiles").delete().eq("user_id", p.user_id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Profile removed");
+    setViewing({ profile: null, index: 0, open: false });
+    load();
+  };
+
+  const adminDeleteUser = async (p: DP) => {
+    if (!isAdmin) return;
+    if (!confirm(`Permanently delete user ${p.display_name}? This removes their account.`)) return;
+    const { error } = await supabase.functions.invoke("delete-user", { body: { target_user_id: p.user_id } });
+    if (error) { toast.error(error.message); return; }
+    toast.success("User deleted");
+    setViewing({ profile: null, index: 0, open: false });
+    load();
+  };
+
   return (
     <AppShell>
       <div className="flex items-center justify-between mb-3">
