@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "./NotificationBell";
 import { OfflineBanner } from "./OfflineBanner";
+import { DownloadAppButton } from "./DownloadAppButton";
+import { RealtimeNotificationPopup } from "./RealtimeNotificationPopup";
 import { useCartCount } from "@/hooks/useCartCount";
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <Link to="/"><Logo /></Link>
           <div className="flex items-center gap-1">
+            <DownloadAppButton />
             <NotificationBell />
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="relative h-9 w-9">
@@ -52,6 +55,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-4 py-4 animate-fade-in">{children}</main>
+      <RealtimeNotificationPopup />
       <BottomNav />
     </div>
   );
