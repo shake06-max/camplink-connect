@@ -176,6 +176,12 @@ const Dating = () => {
                 <Button size="sm" className="w-full gradient-accent h-7 text-[10px]" onClick={() => dm(p.user_id)}>
                   <MessageCircle className="h-3 w-3 mr-1" /> Message
                 </Button>
+                {isAdmin && p.user_id !== user?.id && (
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="outline" className="flex-1 h-7 text-[9px] px-1" onClick={() => adminDeleteProfile(p)}>Remove</Button>
+                    <Button size="sm" variant="destructive" className="flex-1 h-7 text-[9px] px-1" onClick={() => adminDeleteUser(p)}>Delete user</Button>
+                  </div>
+                )}
               </div>
             </Card>
           );})}
