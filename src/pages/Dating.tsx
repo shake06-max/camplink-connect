@@ -101,6 +101,26 @@ const Dating = () => {
     load();
   };
 
+  const adminDeleteProfile = async (p: DP) => {
+    if (!isAdmin) return;
+    if (!confirm(`Delete ${p.display_name}'s entire dating profile?`)) return;
+    const { error } = await supabase.from("dating_profiles").delete().eq("user_id", p.user_id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Profile removed");
+    setViewing({ profile: null, index: 0, open: false });
+    load();
+  };
+
+  const adminDeleteUser = async (p: DP) => {
+    if (!isAdmin) return;
+    if (!confirm(`Permanently delete user ${p.display_name}? This removes their account.`)) return;
+    const { error } = await supabase.functions.invoke("delete-user", { body: { target_user_id: p.user_id } });
+    if (error) { toast.error(error.message); return; }
+    toast.success("User deleted");
+    setViewing({ profile: null, index: 0, open: false });
+    load();
+  };
+
   return (
     <AppShell>
       <div className="flex items-center justify-between mb-3">
@@ -156,6 +176,12 @@ const Dating = () => {
                 <Button size="sm" className="w-full gradient-accent h-7 text-[10px]" onClick={() => dm(p.user_id)}>
                   <MessageCircle className="h-3 w-3 mr-1" /> Message
                 </Button>
+                {isAdmin && p.user_id !== user?.id && (
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="outline" className="flex-1 h-7 text-[9px] px-1" onClick={() => adminDeleteProfile(p)}>Remove</Button>
+                    <Button size="sm" variant="destructive" className="flex-1 h-7 text-[9px] px-1" onClick={() => adminDeleteUser(p)}>Delete user</Button>
+                  </div>
+                )}
               </div>
             </Card>
           );})}

@@ -19,6 +19,7 @@ const DEFAULTS: ThemeMap = {
 export const ThemeEditor = () => {
   const [theme, setTheme] = useState<ThemeMap>({});
   const [saving, setSaving] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
 
   useEffect(() => {
     supabase.from("app_settings").select("theme").eq("id", 1).maybeSingle()
@@ -48,6 +49,22 @@ export const ThemeEditor = () => {
     location.reload();
   };
 
+  const uploadFavicon = async (file: File) => {
+    setUploadingIcon(true);
+    const ext = file.name.split(".").pop() || "png";
+    const path = `favicon-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (upErr) { setUploadingIcon(false); toast.error(upErr.message); return; }
+    const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+    const next = { ...theme, "favicon-url": pub.publicUrl };
+    setTheme(next);
+    applyTheme(next);
+    const { error } = await supabase.from("app_settings").upsert({ id: 1, theme: next, updated_at: new Date().toISOString() });
+    setUploadingIcon(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Web icon updated for everyone 🖼️");
+  };
+
   return (
     <Card className="gradient-card p-4 space-y-3 mb-4">
       <p className="font-semibold text-sm flex items-center gap-2"><Palette className="h-4 w-4" /> App theme & colors</p>
@@ -66,8 +83,16 @@ export const ThemeEditor = () => {
           );
         })}
       </div>
+      <div className="border-t border-border pt-3">
+        <Label className="text-xs flex items-center gap-2">🖼️ Web icon (favicon)</Label>
+        <div className="flex items-center gap-2 mt-1">
+          {theme["favicon-url"] && <img src={theme["favicon-url"]} alt="icon" className="h-8 w-8 rounded" />}
+          <Input type="file" accept="image/*" disabled={uploadingIcon}
+            onChange={e => { const f = e.target.files?.[0]; if (f) uploadFavicon(f); }} />
+        </div>
+      </div>
       <div className="flex gap-2">
-        <Button className="flex-1 gradient-accent" onClick={save} disabled={saving}>{saving ? "Saving…" : "Apply for everyone"}</Button>
+        <Button className="flex-1 gradient-accent" onClick={save} disabled={saving}>{saving ? "Saving…" : "Apply colors for everyone"}</Button>
         <Button variant="outline" onClick={reset}><RotateCcw className="h-4 w-4 mr-1" />Reset</Button>
       </div>
     </Card>
