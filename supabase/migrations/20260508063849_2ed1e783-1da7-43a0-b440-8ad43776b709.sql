@@ -1,0 +1,2 @@
+CREATE POLICY "Participants delete conversations" ON public.conversations FOR DELETE TO authenticated USING (auth.uid() = user_a OR auth.uid() = user_b OR has_role(auth.uid(), 'admin'::app_role));
+CREATE POLICY "Participants delete messages" ON public.messages FOR DELETE TO authenticated USING (EXISTS (SELECT 1 FROM conversations c WHERE c.id = messages.conversation_id AND (auth.uid() = c.user_a OR auth.uid() = c.user_b)) OR has_role(auth.uid(), 'admin'::app_role));
