@@ -9,9 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "./NotificationBell";
 import { OfflineBanner } from "./OfflineBanner";
 import { DownloadAppButton } from "./DownloadAppButton";
-import { RealtimeNotificationPopup } from "./RealtimeNotificationPopup";
-import { MusicPlayer } from "./MusicPlayer";
-import { Decorations } from "./Decorations";
 import { useCartCount } from "@/hooks/useCartCount";
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,9 +54,6 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-4 py-4 animate-fade-in">{children}</main>
-      <RealtimeNotificationPopup />
-      <MusicPlayer />
-      <Decorations />
       <BottomNav />
     </div>
   );
