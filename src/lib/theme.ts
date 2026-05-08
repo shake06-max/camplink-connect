@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Convert "#rrggbb" to "h s% l%"
@@ -47,23 +48,34 @@ export type ThemeMap = Record<string, string>;
 
 export const THEME_KEYS = ["primary", "primary-glow", "accent", "background", "card"] as const;
 
+// Simple subscribable store so any component can react to live theme changes.
+let _theme: ThemeMap = {};
+const _subs = new Set<(t: ThemeMap) => void>();
+export const getTheme = () => _theme;
+export const subscribeTheme = (fn: (t: ThemeMap) => void) => { _subs.add(fn); return () => { _subs.delete(fn); }; };
+
+export const useTheme = () => {
+  const [t, setT] = useState<ThemeMap>(_theme);
+  useEffect(() => subscribeTheme(setT), []);
+  return t;
+};
+
 export const applyTheme = (theme: ThemeMap | null) => {
   if (!theme) return;
+  _theme = { ...theme };
   const root = document.documentElement;
   Object.entries(theme).forEach(([k, v]) => {
     if (!v) return;
     if (k === "favicon-url") {
       let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
-      if (!link) {
-        link = document.createElement("link");
-        link.rel = "icon";
-        document.head.appendChild(link);
-      }
+      if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
       link.href = v;
       return;
     }
+    if (k === "logo-url" || k === "decoration" || k.startsWith("music-")) return; // consumed by components via useTheme
     root.style.setProperty(`--${k}`, v);
   });
+  _subs.forEach(fn => fn(_theme));
 };
 
 export const loadAndSubscribeTheme = () => {
@@ -74,4 +86,9 @@ export const loadAndSubscribeTheme = () => {
       applyTheme(p.new?.theme ?? null);
     }).subscribe();
   return () => { supabase.removeChannel(ch); };
+};
+
+export const saveTheme = async (theme: ThemeMap) => {
+  applyTheme(theme);
+  return supabase.from("app_settings").upsert({ id: 1, theme, updated_at: new Date().toISOString() });
 };

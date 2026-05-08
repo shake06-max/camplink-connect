@@ -7,7 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, ArrowLeft } from "lucide-react";
+import { Send, ArrowLeft, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 type Conv = { id: string; user_a: string; user_b: string; last_message_at: string; other?: { id: string; display_name: string | null } };
 type Msg = { id: string; conversation_id: string; sender_id: string; content: string; created_at: string };
@@ -64,6 +65,23 @@ const Chat = () => {
     if (!error) await supabase.from("conversations").update({ last_message_at: new Date().toISOString() }).eq("id", activeId);
   };
 
+  const deleteMessage = async (id: string) => {
+    if (!confirm("Delete this message?")) return;
+    const { error } = await supabase.from("messages").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    setMessages(m => m.filter(x => x.id !== id));
+  };
+
+  const deleteConversation = async (id: string) => {
+    if (!confirm("Delete this entire chat?")) return;
+    await supabase.from("messages").delete().eq("conversation_id", id);
+    const { error } = await supabase.from("conversations").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Chat deleted");
+    setParams({});
+    loadConvos();
+  };
+
   if (activeId) {
     const conv = convos.find(c => c.id === activeId);
     return (
@@ -71,13 +89,20 @@ const Chat = () => {
         <div className="flex items-center gap-3 mb-3">
           <Button size="icon" variant="ghost" onClick={() => setParams({})}><ArrowLeft className="h-5 w-5" /></Button>
           <Avatar><AvatarFallback className="bg-primary/20 text-primary">{(conv?.other?.display_name ?? "U").slice(0,2).toUpperCase()}</AvatarFallback></Avatar>
-          <p className="font-semibold">{conv?.other?.display_name ?? "Chat"}</p>
+          <p className="font-semibold flex-1">{conv?.other?.display_name ?? "Chat"}</p>
+          <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteConversation(activeId)} title="Delete chat"><Trash2 className="h-4 w-4" /></Button>
         </div>
         <Card className="gradient-card h-[60vh] flex flex-col">
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {messages.map(m => (
-              <div key={m.id} className={`flex ${m.sender_id === user?.id ? "justify-end" : "justify-start"}`}>
+              <div key={m.id} className={`group flex items-center gap-1 ${m.sender_id === user?.id ? "justify-end" : "justify-start"}`}>
+                {m.sender_id === user?.id && (
+                  <button onClick={() => deleteMessage(m.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive p-1" title="Delete"><Trash2 className="h-3 w-3" /></button>
+                )}
                 <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${m.sender_id === user?.id ? "gradient-accent text-primary-foreground" : "bg-secondary"}`}>{m.content}</div>
+                {m.sender_id !== user?.id && (
+                  <button onClick={() => deleteMessage(m.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive p-1" title="Delete"><Trash2 className="h-3 w-3" /></button>
+                )}
               </div>
             ))}
             <div ref={endRef} />
@@ -99,12 +124,15 @@ const Chat = () => {
       ) : (
         <div className="space-y-2">
           {convos.map(c => (
-            <Card key={c.id} className="p-3 gradient-card hover:shadow-glow transition-smooth cursor-pointer flex items-center gap-3" onClick={() => setParams({ c: c.id })}>
-              <Avatar><AvatarFallback className="bg-primary/20 text-primary">{(c.other?.display_name ?? "U").slice(0,2).toUpperCase()}</AvatarFallback></Avatar>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">{c.other?.display_name ?? "User"}</p>
-                <p className="text-xs text-muted-foreground">{new Date(c.last_message_at).toLocaleString()}</p>
+            <Card key={c.id} className="p-3 gradient-card hover:shadow-glow transition-smooth flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1 cursor-pointer min-w-0" onClick={() => setParams({ c: c.id })}>
+                <Avatar><AvatarFallback className="bg-primary/20 text-primary">{(c.other?.display_name ?? "U").slice(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">{c.other?.display_name ?? "User"}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(c.last_message_at).toLocaleString()}</p>
+                </div>
               </div>
+              <Button size="icon" variant="ghost" className="text-destructive shrink-0" onClick={() => deleteConversation(c.id)} title="Delete chat"><Trash2 className="h-4 w-4" /></Button>
             </Card>
           ))}
         </div>
