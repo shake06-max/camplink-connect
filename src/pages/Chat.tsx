@@ -7,7 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, ArrowLeft } from "lucide-react";
+import { Send, ArrowLeft, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 type Conv = { id: string; user_a: string; user_b: string; last_message_at: string; other?: { id: string; display_name: string | null } };
 type Msg = { id: string; conversation_id: string; sender_id: string; content: string; created_at: string };
@@ -62,6 +63,23 @@ const Chat = () => {
     setInput("");
     const { error } = await supabase.from("messages").insert({ conversation_id: activeId, sender_id: user.id, content });
     if (!error) await supabase.from("conversations").update({ last_message_at: new Date().toISOString() }).eq("id", activeId);
+  };
+
+  const deleteMessage = async (id: string) => {
+    if (!confirm("Delete this message?")) return;
+    const { error } = await supabase.from("messages").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    setMessages(m => m.filter(x => x.id !== id));
+  };
+
+  const deleteConversation = async (id: string) => {
+    if (!confirm("Delete this entire chat?")) return;
+    await supabase.from("messages").delete().eq("conversation_id", id);
+    const { error } = await supabase.from("conversations").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Chat deleted");
+    setParams({});
+    loadConvos();
   };
 
   if (activeId) {
