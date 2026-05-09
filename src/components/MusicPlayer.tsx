@@ -1,51 +1,78 @@
 import { useEffect, useRef } from "react";
-import { useTheme } from "@/lib/theme";
+import { useTheme, saveTheme, getTheme } from "@/lib/theme";
+import { useAuth } from "@/hooks/useAuth";
 
-/** Hidden global music player. Admin controls it; users only hear it. */
+export type Track = { type: "file" | "youtube" | "spotify"; url: string; name?: string };
+
+export const parsePlaylist = (raw?: string): Track[] => {
+  if (!raw) return [];
+  try { const v = JSON.parse(raw); return Array.isArray(v) ? v.slice(0, 20) : []; } catch { return []; }
+};
+
+/** Hidden global music player. Admin is authoritative for advancing tracks; everyone syncs. */
 export const MusicPlayer = () => {
   const t = useTheme();
-  const url = t["music-url"];
-  const type = t["music-type"] || "file"; // file | youtube | spotify
-  const playing = t["music-playing"] === "1";
+  const { isAdmin } = useAuth();
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  const playlist = parsePlaylist(t["music-playlist"]);
+  const idx = Math.max(0, Math.min(playlist.length - 1, parseInt(t["music-index"] || "0", 10) || 0));
+  const current: Track | undefined = playlist[idx] ?? (t["music-url"] ? { type: (t["music-type"] as any) || "file", url: t["music-url"] } : undefined);
+  const playing = t["music-playing"] === "1";
+  const volume = Math.max(0, Math.min(1, parseFloat(t["music-volume"] || "0.5")));
+  const startedAt = t["music-started-at"] ? new Date(t["music-started-at"]).getTime() : 0;
+
+  // Apply src / sync position / playback state for FILE tracks
   useEffect(() => {
     const a = audioRef.current;
-    if (!a) return;
-    if (type === "file" && url && playing) {
-      if (a.src !== url) a.src = url;
-      a.loop = true;
-      a.volume = 0.5;
-      a.play().catch(() => { /* autoplay may be blocked until user interaction */ });
-    } else {
-      a.pause();
-    }
-  }, [url, type, playing]);
+    if (!a || !current) return;
+    if (current.type !== "file" || !playing) { a.pause(); return; }
 
-  // Re-attempt play on first user interaction (browsers block autoplay)
+    if (a.src !== current.url) a.src = current.url;
+    a.loop = false;
+    a.volume = volume;
+
+    const sync = () => {
+      if (!startedAt) return;
+      const offset = (Date.now() - startedAt) / 1000;
+      if (isFinite(a.duration) && offset > 0 && offset < a.duration) {
+        if (Math.abs(a.currentTime - offset) > 1.5) a.currentTime = offset;
+      }
+      a.play().catch(() => {});
+    };
+    if (a.readyState >= 1) sync();
+    else a.addEventListener("loadedmetadata", sync, { once: true });
+  }, [current?.url, current?.type, playing, startedAt, volume]);
+
+  // Keep volume reactive
+  useEffect(() => { if (audioRef.current) audioRef.current.volume = volume; }, [volume]);
+
+  // Re-attempt play on first user interaction (autoplay block)
   useEffect(() => {
-    if (type !== "file" || !playing) return;
+    if (!playing || current?.type !== "file") return;
     const tryPlay = () => audioRef.current?.play().catch(() => {});
     window.addEventListener("click", tryPlay, { once: true });
     window.addEventListener("touchstart", tryPlay, { once: true });
-    return () => {
-      window.removeEventListener("click", tryPlay);
-      window.removeEventListener("touchstart", tryPlay);
-    };
-  }, [type, playing, url]);
+    return () => { window.removeEventListener("click", tryPlay); window.removeEventListener("touchstart", tryPlay); };
+  }, [playing, current?.url, current?.type]);
 
-  // Hidden iframe embeds for YouTube / Spotify
+  // Admin advances to next track when current ends → broadcasts to all
+  const onEnded = () => {
+    if (!isAdmin || playlist.length === 0) return;
+    const next = (idx + 1) % playlist.length;
+    saveTheme({ ...getTheme(), "music-index": String(next), "music-started-at": new Date().toISOString(), "music-playing": "1" });
+  };
+
+  // Hidden iframe embeds for YouTube / Spotify (no per-second sync possible)
   const renderEmbed = () => {
-    if (!playing || !url) return null;
-    if (type === "youtube") {
-      const id = extractYouTubeId(url);
-      if (!id) return null;
+    if (!playing || !current) return null;
+    if (current.type === "youtube") {
+      const id = extractYouTubeId(current.url); if (!id) return null;
       const src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&controls=0`;
       return <iframe title="bg-music" src={src} allow="autoplay" style={{ position: "fixed", width: 1, height: 1, opacity: 0, pointerEvents: "none", left: -9999 }} />;
     }
-    if (type === "spotify") {
-      const embed = toSpotifyEmbed(url);
-      if (!embed) return null;
+    if (current.type === "spotify") {
+      const embed = toSpotifyEmbed(current.url); if (!embed) return null;
       return <iframe title="bg-music" src={embed} allow="autoplay" style={{ position: "fixed", width: 1, height: 80, opacity: 0, pointerEvents: "none", left: -9999 }} />;
     }
     return null;
@@ -53,7 +80,7 @@ export const MusicPlayer = () => {
 
   return (
     <>
-      <audio ref={audioRef} hidden />
+      <audio ref={audioRef} hidden onEnded={onEnded} />
       {renderEmbed()}
     </>
   );
