@@ -4,28 +4,26 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { hexToHsl, hslToHex, applyTheme, saveTheme, THEME_KEYS, ThemeMap } from "@/lib/theme";
-import { Palette, RotateCcw, Music, Play, Square, Image as ImageIcon, Sparkles } from "lucide-react";
+import { parsePlaylist, Track } from "@/components/MusicPlayer";
+import { Palette, RotateCcw, Music, Play, Square, Image as ImageIcon, Sparkles, Plus, Trash2, SkipForward, SkipBack, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 
 const DEFAULTS: ThemeMap = {
-  "primary": "252 84% 65%",
-  "primary-glow": "270 90% 72%",
-  "accent": "168 76% 52%",
-  "background": "240 10% 6%",
-  "card": "240 12% 10%",
+  "primary": "252 84% 65%", "primary-glow": "270 90% 72%", "accent": "168 76% 52%",
+  "background": "240 10% 6%", "card": "240 12% 10%",
 };
 
 const DECORATIONS = [
-  { v: "none", label: "None" },
-  { v: "christmas", label: "🎄 Christmas" },
-  { v: "halloween", label: "🎃 Halloween" },
-  { v: "valentine", label: "💖 Valentine" },
-  { v: "newyear", label: "🎆 New Year" },
-  { v: "birthday", label: "🎂 Birthday" },
+  { v: "none", label: "None" }, { v: "christmas", label: "🎄 Christmas" },
+  { v: "halloween", label: "🎃 Halloween" }, { v: "valentine", label: "💖 Valentine" },
+  { v: "newyear", label: "🎆 New Year" }, { v: "birthday", label: "🎂 Birthday" },
   { v: "easter", label: "🐰 Easter" },
 ];
+
+const MAX_TRACKS = 20;
 
 export const ThemeEditor = () => {
   const [theme, setTheme] = useState<ThemeMap>({});
@@ -35,11 +33,16 @@ export const ThemeEditor = () => {
   const [uploadingMusic, setUploadingMusic] = useState(false);
   const [musicLink, setMusicLink] = useState("");
   const [musicLinkType, setMusicLinkType] = useState<"youtube" | "spotify">("youtube");
+  const [linkName, setLinkName] = useState("");
 
   useEffect(() => {
     supabase.from("app_settings").select("theme").eq("id", 1).maybeSingle()
       .then(({ data }) => setTheme((data?.theme as ThemeMap) ?? {}));
   }, []);
+
+  const playlist: Track[] = parsePlaylist(theme["music-playlist"]);
+  const idx = parseInt(theme["music-index"] || "0", 10) || 0;
+  const volume = parseFloat(theme["music-volume"] || "0.5");
 
   const update = async (next: ThemeMap, msg?: string) => {
     setTheme(next);
@@ -50,24 +53,18 @@ export const ThemeEditor = () => {
 
   const setKey = (k: string, hex: string) => {
     const next = { ...theme, [k]: hexToHsl(hex) };
-    setTheme(next);
-    applyTheme(next);
+    setTheme(next); applyTheme(next);
   };
 
   const saveColors = async () => {
     setSaving(true);
-    const { error } = await saveTheme(theme);
-    setSaving(false);
+    const { error } = await saveTheme(theme); setSaving(false);
     if (error) toast.error(error.message); else toast.success("Theme saved for everyone 🎨");
   };
 
   const reset = async () => {
-    const next: ThemeMap = {};
-    setTheme(next);
-    applyTheme(DEFAULTS);
-    await saveTheme(next);
-    toast.success("Reset");
-    location.reload();
+    setTheme({}); applyTheme(DEFAULTS); await saveTheme({});
+    toast.success("Reset"); location.reload();
   };
 
   const uploadTo = async (bucket: string, file: File, prefix: string) => {
@@ -81,33 +78,57 @@ export const ThemeEditor = () => {
   const uploadFavicon = async (file: File) => {
     setUploadingIcon(true);
     try { const url = await uploadTo("avatars", file, "favicon"); await update({ ...theme, "favicon-url": url }, "Web icon updated 🖼️"); }
-    catch (e: any) { toast.error(e.message); }
-    finally { setUploadingIcon(false); }
+    catch (e: any) { toast.error(e.message); } finally { setUploadingIcon(false); }
   };
 
   const uploadLogo = async (file: File) => {
     setUploadingLogo(true);
     try { const url = await uploadTo("avatars", file, "logo"); await update({ ...theme, "logo-url": url }, "App logo updated"); }
-    catch (e: any) { toast.error(e.message); }
-    finally { setUploadingLogo(false); }
+    catch (e: any) { toast.error(e.message); } finally { setUploadingLogo(false); }
   };
 
-  const uploadMusic = async (file: File) => {
+  const savePlaylist = (tracks: Track[], extras: ThemeMap = {}) =>
+    update({ ...theme, "music-playlist": JSON.stringify(tracks.slice(0, MAX_TRACKS)), ...extras });
+
+  const addTrackFile = async (file: File) => {
+    if (playlist.length >= MAX_TRACKS) { toast.error(`Max ${MAX_TRACKS} songs`); return; }
     setUploadingMusic(true);
     try {
       const url = await uploadTo("music", file, "track");
-      await update({ ...theme, "music-url": url, "music-type": "file", "music-playing": "1" }, "Now playing for everyone 🎵");
-    } catch (e: any) { toast.error(e.message); }
-    finally { setUploadingMusic(false); }
+      const next = [...playlist, { type: "file" as const, url, name: file.name }];
+      const startNow = playlist.length === 0;
+      await savePlaylist(next, startNow ? { "music-index": "0", "music-started-at": new Date().toISOString(), "music-playing": "1" } : {});
+      toast.success(`Added "${file.name}"`);
+    } catch (e: any) { toast.error(e.message); } finally { setUploadingMusic(false); }
   };
 
-  const useLink = async () => {
-    if (!musicLink.trim()) { toast.error("Paste a link first"); return; }
-    await update({ ...theme, "music-url": musicLink.trim(), "music-type": musicLinkType, "music-playing": "1" }, "Streaming for everyone 🎵");
+  const addTrackLink = async () => {
+    if (!musicLink.trim()) { toast.error("Paste a link"); return; }
+    if (playlist.length >= MAX_TRACKS) { toast.error(`Max ${MAX_TRACKS} songs`); return; }
+    const next = [...playlist, { type: musicLinkType, url: musicLink.trim(), name: linkName.trim() || musicLinkType }];
+    const startNow = playlist.length === 0;
+    await savePlaylist(next, startNow ? { "music-index": "0", "music-started-at": new Date().toISOString(), "music-playing": "1" } : {});
+    setMusicLink(""); setLinkName(""); toast.success("Added");
   };
 
-  const togglePlay = () => update({ ...theme, "music-playing": theme["music-playing"] === "1" ? "0" : "1" });
+  const removeTrack = async (i: number) => {
+    const next = playlist.filter((_, j) => j !== i);
+    let extras: ThemeMap = {};
+    if (next.length === 0) extras = { "music-playing": "0", "music-index": "0" };
+    else if (i === idx) extras = { "music-index": "0", "music-started-at": new Date().toISOString() };
+    else if (i < idx) extras = { "music-index": String(idx - 1) };
+    await savePlaylist(next, extras);
+  };
+
+  const playAt = (i: number) => update({ ...theme, "music-index": String(i), "music-started-at": new Date().toISOString(), "music-playing": "1" }, "Now syncing to all users 🎵");
+  const next = () => playlist.length && playAt((idx + 1) % playlist.length);
+  const prev = () => playlist.length && playAt((idx - 1 + playlist.length) % playlist.length);
+  const togglePlay = () => {
+    const wasPlaying = theme["music-playing"] === "1";
+    update({ ...theme, "music-playing": wasPlaying ? "0" : "1", ...(wasPlaying ? {} : { "music-started-at": new Date().toISOString() }) });
+  };
   const stopMusic = () => update({ ...theme, "music-playing": "0" }, "Stopped");
+  const setVolume = (v: number) => update({ ...theme, "music-volume": String(v) });
 
   return (
     <Card className="gradient-card p-4 space-y-4 mb-4">
@@ -161,40 +182,56 @@ export const ThemeEditor = () => {
         </Select>
       </div>
 
-      <div className="border-t border-border pt-3 space-y-2">
-        <p className="text-sm font-semibold flex items-center gap-2"><Music className="h-4 w-4" /> Background music (plays for ALL users)</p>
-        <p className="text-[11px] text-muted-foreground">Users won't see a player — only hear the music. Tap to start; it persists across pages.</p>
-        <div>
-          <Label className="text-xs">Upload audio file (mp3, m4a…)</Label>
-          <Input type="file" accept="audio/*" disabled={uploadingMusic}
-            onChange={e => { const f = e.target.files?.[0]; if (f) uploadMusic(f); }} />
-        </div>
-        <div className="flex gap-2 items-end">
-          <div className="flex-1">
-            <Label className="text-xs">Or paste a YouTube / Spotify link</Label>
-            <Input value={musicLink} onChange={e => setMusicLink(e.target.value)} placeholder="https://…" />
-          </div>
-          <Select value={musicLinkType} onValueChange={(v: any) => setMusicLinkType(v)}>
-            <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="youtube">YouTube</SelectItem>
-              <SelectItem value="spotify">Spotify</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={useLink}>Use</Button>
-        </div>
-        {theme["music-url"] && (
-          <div className="rounded-md bg-secondary/40 p-2 text-xs space-y-1">
-            <div><span className="text-muted-foreground">Source:</span> {theme["music-type"]} · <span className="truncate">{theme["music-url"]}</span></div>
-            <div><span className="text-muted-foreground">Status:</span> {theme["music-playing"] === "1" ? "▶ Playing for everyone" : "⏸ Paused"}</div>
-            <div className="flex gap-2 pt-1">
-              <Button size="sm" onClick={togglePlay} className="flex-1">
-                {theme["music-playing"] === "1" ? <><Square className="h-3 w-3 mr-1" />Pause</> : <><Play className="h-3 w-3 mr-1" />Play</>}
-              </Button>
-              <Button size="sm" variant="outline" onClick={stopMusic}>Stop</Button>
+      <div className="border-t border-border pt-3 space-y-3">
+        <p className="text-sm font-semibold flex items-center gap-2"><Music className="h-4 w-4" /> Synced playlist (plays for ALL users)</p>
+        <p className="text-[11px] text-muted-foreground">Up to {MAX_TRACKS} songs. Uploaded files sync exactly (same track + timestamp). YouTube/Spotify links autoplay but can't be position-synced.</p>
+
+        <div className="rounded-md bg-secondary/40 p-2 space-y-1 max-h-60 overflow-y-auto">
+          {playlist.length === 0 && <p className="text-xs text-muted-foreground text-center py-2">No tracks yet</p>}
+          {playlist.map((tr, i) => (
+            <div key={i} className={`flex items-center gap-2 p-1.5 rounded text-xs ${i === idx ? "bg-primary/20" : ""}`}>
+              <span className="w-6 text-center text-muted-foreground">{i + 1}</span>
+              <button className="flex-1 truncate text-left" onClick={() => playAt(i)}>{tr.name || tr.url} <span className="text-muted-foreground">· {tr.type}</span></button>
+              {i === idx && theme["music-playing"] === "1" && <span className="text-[10px] text-primary">▶</span>}
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeTrack(i)}><Trash2 className="h-3 w-3" /></Button>
             </div>
+          ))}
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <Button size="sm" variant="outline" onClick={prev} disabled={playlist.length < 2}><SkipBack className="h-3 w-3" /></Button>
+          <Button size="sm" onClick={togglePlay} disabled={playlist.length === 0} className="flex-1">
+            {theme["music-playing"] === "1" ? <><Square className="h-3 w-3 mr-1" />Pause</> : <><Play className="h-3 w-3 mr-1" />Play</>}
+          </Button>
+          <Button size="sm" variant="outline" onClick={next} disabled={playlist.length < 2}><SkipForward className="h-3 w-3" /></Button>
+          <Button size="sm" variant="outline" onClick={stopMusic}>Stop</Button>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs flex items-center gap-2"><Volume2 className="h-3 w-3" /> Volume — {Math.round(volume * 100)}%</Label>
+          <Slider value={[volume * 100]} max={100} step={1} onValueChange={v => setVolume(v[0] / 100)} />
+        </div>
+
+        <div className="border-t border-border/50 pt-2 space-y-2">
+          <Label className="text-xs flex items-center gap-2"><Plus className="h-3 w-3" /> Add audio file</Label>
+          <Input type="file" accept="audio/*" disabled={uploadingMusic || playlist.length >= MAX_TRACKS}
+            onChange={e => { const f = e.target.files?.[0]; if (f) addTrackFile(f); e.currentTarget.value = ""; }} />
+
+          <Label className="text-xs">Or add YouTube / Spotify link</Label>
+          <div className="flex gap-2">
+            <Input value={linkName} onChange={e => setLinkName(e.target.value)} placeholder="Name (optional)" className="w-32" />
+            <Input value={musicLink} onChange={e => setMusicLink(e.target.value)} placeholder="https://…" />
+            <Select value={musicLinkType} onValueChange={(v: any) => setMusicLinkType(v)}>
+              <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="youtube">YouTube</SelectItem>
+                <SelectItem value="spotify">Spotify</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={addTrackLink} disabled={playlist.length >= MAX_TRACKS}>Add</Button>
           </div>
-        )}
+          <p className="text-[10px] text-muted-foreground">{playlist.length}/{MAX_TRACKS} songs</p>
+        </div>
       </div>
 
       <div className="flex gap-2 border-t border-border pt-3">
