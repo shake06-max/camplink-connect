@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { ShoppingBag, Building2, Star, ArrowRight, Heart, Megaphone, Loader2, Film, Search, TrendingUp, Sparkles, Flame } from "lucide-react";
+import { ShoppingBag, Building2, Star, ArrowRight, ArrowUpRight, Heart, Megaphone, Loader2, Film, Search, TrendingUp, Sparkles, Users } from "lucide-react";
 import { ListingCard, Listing } from "@/components/ListingCard";
 import { AddListingDialog } from "@/components/AddListingDialog";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { cacheGet, cacheSet } from "@/lib/offlineCache";
 import { useOnline } from "@/hooks/useOnline";
 import { AdBanner } from "@/components/AdBanner";
+import campusEvening from "@/assets/campus-evening.jpg";
+import { useTheme } from "@/lib/theme";
 
 const PAGE_SIZE = 30;
 
@@ -27,6 +29,7 @@ const getGreeting = () => {
 
 const Index = () => {
   const { user } = useAuth();
+  const theme = useTheme();
   const online = useOnline();
   const [recent, setRecent] = useState<Listing[]>([]);
   const [name, setName] = useState("");
@@ -131,38 +134,38 @@ const Index = () => {
   return (
     <AppShell>
       <AdBanner />
-      {/* Magazine masthead */}
-      <section className="relative mb-8 overflow-hidden rounded-2xl gradient-hero p-6 md:p-10 shadow-lux ring-gold">
-        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/30 blur-3xl animate-neon-float" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl animate-neon-float [animation-delay:-4s]" />
-
-        <div className="relative flex items-center justify-between">
-          <span className="kicker text-gold">Camplink · Issue N°{String(stats.today || 1).padStart(2, "0")}</span>
-          <span className="kicker text-white/60 hidden sm:block">{new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</span>
+      <section className="campus-masthead relative mb-6 overflow-hidden border-b border-accent/30">
+        <img src={campusEvening} alt="Students walking through a warmly lit campus at dusk" width={1920} height={1024} fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-[65%_center]" />
+        <div className="campus-photo-shade absolute inset-0" />
+        <div className="relative p-5 sm:p-8 lg:px-9 lg:py-8">
+        <div className="flex items-center justify-between gap-4">
+          <span className="kicker text-accent">{theme["app-name"] || "Camplink"} · The campus edition</span>
+          <span className="kicker text-foreground/80 hidden sm:block">A world within your campus</span>
         </div>
-        <div className="hairline-gold my-4" />
+        <div className="my-4 sm:my-5 h-px bg-foreground/20" />
 
-        <h1 className="relative font-serif text-white text-4xl sm:text-5xl md:text-7xl leading-[0.95] tracking-tight ios:text-5xl">
-          {greeting.text} {greeting.emoji}, <em className="italic text-gold">{name || "friend"}</em>.<br />
-          <span className="text-white/85">Your campus, curated.</span>
+        <h1 className="campus-headline font-serif text-foreground">
+          Good things happen<br />
+          when you <em className="text-accent">connect.</em><br />
+          Your campus, curated.
         </h1>
-        <p className="relative mt-4 max-w-xl text-white/75 text-sm md:text-base leading-relaxed">
-          A private marketplace, community and social club for students — refined, real-time, and richly rewarding.
+        <p className="mt-4 max-w-xl text-foreground/85 text-[13px] leading-relaxed">
+          A private marketplace, community and social club for students.<br className="hidden sm:block" />
+          Real people. Fresh finds. A little closer to home.
         </p>
 
-        {/* Search bar */}
-        <div className="relative mt-6 max-w-xl">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+        <div className="relative mt-6 max-w-[490px]">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search the marketplace, housing, people…"
-            className="pl-10 h-12 rounded-full bg-white/10 backdrop-blur border-white/15 text-white placeholder:text-white/50 focus-visible:ring-accent"
+            aria-label="Search campus listings"
+            placeholder="Search the marketplace, housing, and more…"
+            className="campus-search pl-11 h-12 rounded-md bg-background/65 backdrop-blur-sm border-foreground/20 text-foreground text-xs placeholder:text-muted-foreground focus-visible:ring-accent"
           />
         </div>
 
-        {/* Section chips */}
-        <div className="relative mt-6 grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
             { to: "/market", label: "Market", icon: ShoppingBag },
             { to: "/housing", label: "Housing", icon: Building2 },
@@ -171,31 +174,37 @@ const Index = () => {
             { to: "/reviews", label: "Reviews", icon: Star },
             { to: "/reels", label: "Reels", icon: Film },
           ].map(({ to, label, icon: Icon }) => (
-            <Link key={to} to={to} className="group">
-              <div className="flex flex-col items-center gap-1.5 rounded-xl bg-white/8 backdrop-blur ring-1 ring-white/10 py-3 transition-smooth hover:bg-white/15 hover:ring-accent/40">
-                <Icon className="h-4 w-4 text-accent" />
-                <span className="kicker text-white/85">{label}</span>
-              </div>
-            </Link>
+            <Button key={to} asChild variant="outline" className="campus-shortcut group h-11 rounded-md border-foreground/15 bg-background/60 backdrop-blur-sm text-xs text-foreground hover:border-accent/50 hover:bg-background/80 hover:text-foreground">
+              <Link to={to}>
+                <Icon className="text-accent" />
+                <span>{label}</span>
+                <ArrowUpRight className="text-accent/50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </Link>
+            </Button>
           ))}
+        </div>
         </div>
       </section>
 
 
-      {/* Editorial stats strip */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-[1fr_1fr_1.15fr] border-y border-border py-5 mb-8">
         {[
-          { label: "Listings", value: stats.listings },
-          { label: "Members", value: stats.users },
-          { label: "Today", value: stats.today, icon: Flame },
+          { label: "Campus listings", value: stats.listings, icon: ShoppingBag },
+          { label: "Community members", value: stats.users, icon: Users },
         ].map(({ label, value, icon: Icon }) => (
-          <Card key={label} className="relative overflow-hidden p-4 gradient-card ring-gold">
-            <span className="kicker text-muted-foreground flex items-center gap-1">
-              {Icon && <Icon className="h-3 w-3 text-accent" />} {label}
-            </span>
-            <p className="font-serif text-3xl md:text-4xl mt-1 text-gold">{value.toLocaleString()}</p>
-          </Card>
+          <div key={label} className="flex items-center gap-3 px-1 sm:px-4 border-r border-border last:border-r-0">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/60"><Icon className="h-4 w-4 text-accent" /></span>
+            <div>
+              <p className="font-serif text-3xl leading-none text-foreground">{String(value).padStart(2, "0")}</p>
+              <p className="text-[10px] text-muted-foreground mt-2">{label}</p>
+            </div>
+          </div>
         ))}
+        <Link to={user ? "/dashboard" : "/community"} className="hidden lg:flex items-center justify-end gap-3 px-6 text-xs text-muted-foreground hover:text-foreground">
+          <span className="h-1.5 w-1.5 rounded-full bg-success" />
+          {user ? `${greeting.text}, ${name || "friend"}` : "A campus full of possibilities"}
+          <ArrowUpRight className="h-3 w-3" />
+        </Link>
       </div>
 
       {/* Trending tags */}
@@ -234,7 +243,7 @@ const Index = () => {
             </div>
             <Link to="/market" className="hidden md:inline-flex kicker text-muted-foreground hover:text-accent items-center gap-1">Browse all <ArrowRight className="h-3 w-3" /></Link>
           </div>
-          <div className="hairline-gold mb-4" />
+          <div className="h-px bg-border mb-4" />
           <div className="-mx-4 flex gap-4 overflow-x-auto pb-3 px-4 snap-x snap-mandatory scrollbar-none">
             {featured.map(l => (
               <div key={l.id} className="snap-start shrink-0 w-48 sm:w-56 md:w-64">
@@ -252,14 +261,14 @@ const Index = () => {
         </div>
         <Link to="/market" className="kicker text-muted-foreground hover:text-accent flex items-center gap-1">See all <ArrowRight className="h-3 w-3" /></Link>
       </div>
-      <div className="hairline-gold mb-5" />
+      <div className="h-px bg-border mb-5" />
 
 
       {filtered.length === 0 ? (
-        <Card className="p-8 text-center gradient-card">
+        <div className="py-12 text-center border-y border-border">
           <p className="text-muted-foreground mb-3">{recent.length === 0 ? "No listings yet — be the first!" : "No matches for your search."}</p>
           {recent.length === 0 && user && <AddListingDialog onCreated={load} />}
-        </Card>
+        </div>
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
