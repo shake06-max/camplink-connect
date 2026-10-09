@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Home, ShoppingBag, Heart, Megaphone, MessageCircle, Wallet, LayoutDashboard } from "lucide-react";
+import { Home, ShoppingBag, Heart, Megaphone, MessageCircle, Wallet, LayoutDashboard, Package, UserRound } from "lucide-react";
 import { Logo } from "./Logo";
 import { BottomNav } from "./BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,12 +23,12 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-8">
+    <div className="min-h-screen bg-background pb-20 lg:pb-8">
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-lg">
         <OfflineBanner />
-        <div className="mx-auto flex w-full max-w-2xl md:max-w-6xl items-center justify-between gap-4 px-4 md:px-8 py-3">
-          <Link to="/" className="shrink-0"><Logo /></Link>
-          <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
+        <div className="mx-auto flex w-full max-w-[1328px] items-center justify-between gap-4 px-4 lg:px-10 py-2.5">
+          <Link to="/" className="shrink-0" aria-label="Camplink home"><Logo /></Link>
+          <nav aria-label="Main navigation" className="hidden lg:flex items-center gap-1 flex-1 justify-center">
             {[
               { to: "/", label: "Home", icon: Home, end: true },
               { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -37,14 +37,15 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
               { to: "/dating", label: "Hookup", icon: Heart },
               { to: "/chat", label: "Chat", icon: MessageCircle },
               { to: "/wallet", label: "Wallet", icon: Wallet },
+               { to: "/orders", label: "Orders", icon: Package },
             ].map(({ to, label, icon: Icon, end }) => (
               <NavLink
                 key={to}
                 to={to}
-                end={end as any}
+                end={end}
                 className={({ isActive }) =>
-                  `flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-smooth ${
-                    isActive ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  `flex items-center gap-2 rounded-md px-2.5 py-2 text-xs transition-smooth ${
+                    isActive ? "text-foreground" : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   }`
                 }
               >
@@ -56,18 +57,17 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
           <div className="flex items-center gap-1">
             <DownloadAppButton />
             <NotificationBell />
-            <Link to="/profile">
+            <Link to="/profile" aria-label="Your profile">
               <Avatar className="h-9 w-9 border border-border ml-1">
                 {avatar && <AvatarImage src={avatar} alt="me" />}
-                <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">{initials}</AvatarFallback>
+                <AvatarFallback className="bg-secondary/70 text-accent text-xs font-semibold">{user ? initials : <UserRound className="h-4 w-4" />}</AvatarFallback>
               </Avatar>
             </Link>
           </div>
         </div>
-        <div className="hairline-gold" />
       </header>
 
-      <main className="mx-auto w-full max-w-2xl md:max-w-6xl px-4 md:px-8 py-4 md:py-8 animate-fade-in">{children}</main>
+      <main className="mx-auto w-full max-w-[1224px] px-4 md:px-8 py-5 md:py-7 animate-fade-in">{children}</main>
       <BottomNav />
     </div>
   );
