@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_sale_fees: {
+        Row: {
+          created_at: string
+          fee_cents: number
+          id: string
+          order_id: string
+          seller_id: string
+        }
+        Insert: {
+          created_at?: string
+          fee_cents?: number
+          id?: string
+          order_id: string
+          seller_id: string
+        }
+        Update: {
+          created_at?: string
+          fee_cents?: number
+          id?: string
+          order_id?: string
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_sale_fees_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ads: {
         Row: {
           active: boolean
@@ -26,6 +58,7 @@ export type Database = {
           priority: number
           title: string
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           active?: boolean
@@ -38,6 +71,7 @@ export type Database = {
           priority?: number
           title: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           active?: boolean
@@ -50,6 +84,141 @@ export type Database = {
           priority?: number
           title?: string
           updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      ai_conversations: {
+        Row: {
+          actor_key: string
+          created_at: string
+          id: string
+          session_key: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          actor_key: string
+          created_at?: string
+          id?: string
+          session_key: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          actor_key?: string
+          created_at?: string
+          id?: string
+          session_key?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_knowledge: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_rate_limits: {
+        Row: {
+          actor_key: string
+          request_count: number
+          user_id: string | null
+          window_started_at: string
+        }
+        Insert: {
+          actor_key: string
+          request_count?: number
+          user_id?: string | null
+          window_started_at?: string
+        }
+        Update: {
+          actor_key?: string
+          request_count?: number
+          user_id?: string | null
+          window_started_at?: string
+        }
+        Relationships: []
+      }
+      ai_settings: {
+        Row: {
+          enabled: boolean
+          id: boolean
+          support_url: string
+          updated_at: string
+          welcome_message: string
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+          support_url?: string
+          updated_at?: string
+          welcome_message?: string
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+          support_url?: string
+          updated_at?: string
+          welcome_message?: string
         }
         Relationships: []
       }
@@ -111,17 +280,23 @@ export type Database = {
       }
       app_settings: {
         Row: {
+          hookup_enabled: boolean
           id: number
+          reels_enabled: boolean
           theme: Json
           updated_at: string
         }
         Insert: {
+          hookup_enabled?: boolean
           id?: number
+          reels_enabled?: boolean
           theme?: Json
           updated_at?: string
         }
         Update: {
+          hookup_enabled?: boolean
           id?: number
+          reels_enabled?: boolean
           theme?: Json
           updated_at?: string
         }
@@ -306,6 +481,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_support: boolean
           last_message_at: string
           user_a: string
           user_b: string
@@ -313,6 +489,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_support?: boolean
           last_message_at?: string
           user_a: string
           user_b: string
@@ -320,6 +497,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_support?: boolean
           last_message_at?: string
           user_a?: string
           user_b?: string
@@ -489,6 +667,8 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           location: string | null
+          location_latitude: number | null
+          location_longitude: number | null
           photos: string[]
           price: number
           subcategory: string | null
@@ -507,6 +687,8 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           location?: string | null
+          location_latitude?: number | null
+          location_longitude?: number | null
           photos?: string[]
           price?: number
           subcategory?: string | null
@@ -525,6 +707,8 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           location?: string | null
+          location_latitude?: number | null
+          location_longitude?: number | null
           photos?: string[]
           price?: number
           subcategory?: string | null
@@ -567,6 +751,36 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          delivery_alerts: boolean
+          email_enabled: boolean
+          order_updates: boolean
+          push_enabled: boolean
+          sms_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          delivery_alerts?: boolean
+          email_enabled?: boolean
+          order_updates?: boolean
+          push_enabled?: boolean
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          delivery_alerts?: boolean
+          email_enabled?: boolean
+          order_updates?: boolean
+          push_enabled?: boolean
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -605,69 +819,120 @@ export type Database = {
           amount: number
           amount_usd: number | null
           buyer_id: string
+          cancelled_at: string | null
           checkout_request_id: string | null
           created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          delivered_at: string | null
+          delivery_address: string | null
+          delivery_latitude: number | null
+          delivery_longitude: number | null
+          delivery_method: string
+          fulfillment_type: string
           id: string
           kind: string
           listing_id: string | null
+          location: string | null
           merchant_request_id: string | null
           mpesa_receipt: string | null
           paypal_order_id: string | null
           pesapal_tracking_id: string | null
           phone: string | null
+          pickup_code: string | null
+          pickup_location: string | null
+          pickup_station: string | null
           provider: string
           quantity: number
           raw_callback: Json | null
+          refund_status: string
           result_code: number | null
           result_desc: string | null
           seller_id: string | null
           status: string
+          tracking_latitude: number | null
+          tracking_longitude: number | null
+          tracking_updated_at: string | null
           updated_at: string
         }
         Insert: {
           amount: number
           amount_usd?: number | null
           buyer_id: string
+          cancelled_at?: string | null
           checkout_request_id?: string | null
           created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          delivered_at?: string | null
+          delivery_address?: string | null
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
+          delivery_method?: string
+          fulfillment_type?: string
           id?: string
           kind?: string
           listing_id?: string | null
+          location?: string | null
           merchant_request_id?: string | null
           mpesa_receipt?: string | null
           paypal_order_id?: string | null
           pesapal_tracking_id?: string | null
           phone?: string | null
+          pickup_code?: string | null
+          pickup_location?: string | null
+          pickup_station?: string | null
           provider?: string
           quantity?: number
           raw_callback?: Json | null
+          refund_status?: string
           result_code?: number | null
           result_desc?: string | null
           seller_id?: string | null
           status?: string
+          tracking_latitude?: number | null
+          tracking_longitude?: number | null
+          tracking_updated_at?: string | null
           updated_at?: string
         }
         Update: {
           amount?: number
           amount_usd?: number | null
           buyer_id?: string
+          cancelled_at?: string | null
           checkout_request_id?: string | null
           created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          delivered_at?: string | null
+          delivery_address?: string | null
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
+          delivery_method?: string
+          fulfillment_type?: string
           id?: string
           kind?: string
           listing_id?: string | null
+          location?: string | null
           merchant_request_id?: string | null
           mpesa_receipt?: string | null
           paypal_order_id?: string | null
           pesapal_tracking_id?: string | null
           phone?: string | null
+          pickup_code?: string | null
+          pickup_location?: string | null
+          pickup_station?: string | null
           provider?: string
           quantity?: number
           raw_callback?: Json | null
+          refund_status?: string
           result_code?: number | null
           result_desc?: string | null
           seller_id?: string | null
           status?: string
+          tracking_latitude?: number | null
+          tracking_longitude?: number | null
+          tracking_updated_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -709,6 +974,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approved: boolean
           avatar_url: string | null
           contact_access: boolean
           created_at: string
@@ -718,8 +984,10 @@ export type Database = {
           phone: string | null
           suspended: boolean
           updated_at: string
+          username: string | null
         }
         Insert: {
+          approved?: boolean
           avatar_url?: string | null
           contact_access?: boolean
           created_at?: string
@@ -729,8 +997,10 @@ export type Database = {
           phone?: string | null
           suspended?: boolean
           updated_at?: string
+          username?: string | null
         }
         Update: {
+          approved?: boolean
           avatar_url?: string | null
           contact_access?: boolean
           created_at?: string
@@ -740,6 +1010,7 @@ export type Database = {
           phone?: string | null
           suspended?: boolean
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -749,6 +1020,7 @@ export type Database = {
           amount: number
           code: string
           created_at: string
+          discount_ksh: number | null
           expires_at: string | null
           id: string
           max_uses: number
@@ -759,6 +1031,7 @@ export type Database = {
           amount: number
           code: string
           created_at?: string
+          discount_ksh?: number | null
           expires_at?: string | null
           id?: string
           max_uses?: number
@@ -769,6 +1042,7 @@ export type Database = {
           amount?: number
           code?: string
           created_at?: string
+          discount_ksh?: number | null
           expires_at?: string | null
           id?: string
           max_uses?: number
@@ -1105,11 +1379,51 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawal_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          phone: string
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          phone: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          phone?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_approve_cash_withdrawal: {
+        Args: { _note?: string; _request_id: string }
+        Returns: undefined
+      }
       admin_cash_adjust: {
         Args: { _amount: number; _note?: string; _uid: string }
         Returns: number
@@ -1118,14 +1432,49 @@ export type Database = {
         Args: { _frozen: boolean; _uid: string }
         Returns: undefined
       }
+      admin_list_cash_withdrawals: {
+        Args: never
+        Returns: {
+          amount: number
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          note: string
+          phone: string
+          status: string
+          user_id: string
+        }[]
+      }
+      admin_reject_cash_withdrawal: {
+        Args: { _note?: string; _request_id: string }
+        Returns: undefined
+      }
+      admin_update_order_status: {
+        Args: { _order_id: string; _status: string }
+        Returns: undefined
+      }
+      admin_verify_pickup: {
+        Args: { _order_id: string; _pickup_code: string }
+        Returns: undefined
+      }
       admin_wallet_adjust: {
         Args: { _amount: number; _note?: string; _uid: string }
         Returns: number
       }
       advance_music: { Args: never; Returns: undefined }
       apply_referral: { Args: { _referrer: string }; Returns: number }
+      buyer_cancel_order: { Args: { _order_id: string }; Returns: undefined }
       claim_campaign: { Args: { _cid: string }; Returns: number }
       claim_daily_bonus: { Args: never; Returns: number }
+      consume_ai_rate_limit: {
+        Args: { _actor_key: string; _limit?: number }
+        Returns: boolean
+      }
+      consume_promo_code: {
+        Args: { _code: string; _order_id?: string; _user_id: string }
+        Returns: number
+      }
       ensure_wallet: { Args: { _uid: string }; Returns: undefined }
       has_role: {
         Args: {
@@ -1135,7 +1484,25 @@ export type Database = {
         Returns: boolean
       }
       is_suspended: { Args: { _user_id: string }; Returns: boolean }
+      notify_order_seller: { Args: { _order_id: string }; Returns: undefined }
+      open_support_chat: { Args: never; Returns: string }
       redeem_promo: { Args: { _code: string }; Returns: number }
+      request_cash_withdrawal: {
+        Args: { _amount: number; _phone: string }
+        Returns: string
+      }
+      seller_confirm_order_delivered: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
+      seller_update_order_location: {
+        Args: { _latitude: number; _longitude: number; _order_id: string }
+        Returns: undefined
+      }
+      seller_update_order_status: {
+        Args: { _order_id: string; _status: string }
+        Returns: undefined
+      }
       tier_for: { Args: { _bal: number }; Returns: string }
       wallet_cash_credit: {
         Args: {
@@ -1157,8 +1524,67 @@ export type Database = {
         }
         Returns: number
       }
+      wallet_cash_purchase: {
+        Args: {
+          _address?: string
+          _delivery_method?: string
+          _listing_id: string
+          _location?: string
+          _pickup_station?: string
+          _quantity?: number
+        }
+        Returns: string
+      }
+      wallet_cash_purchase_checkout: {
+        Args: {
+          _customer_name: string
+          _delivery_address?: string
+          _email: string
+          _fulfillment_type: string
+          _listing_id: string
+          _phone: string
+          _pickup_location?: string
+          _quantity: number
+        }
+        Returns: {
+          order_id: string
+          pickup_code: string
+        }[]
+      }
+      wallet_cash_purchase_with_location:
+        | {
+            Args: {
+              _address?: string
+              _delivery_method?: string
+              _latitude?: number
+              _listing_id: string
+              _location?: string
+              _longitude?: number
+              _pickup_station?: string
+              _quantity?: number
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _address?: string
+              _delivery_method?: string
+              _latitude?: number
+              _listing_id: string
+              _location?: string
+              _longitude?: number
+              _pickup_station?: string
+              _promo_code?: string
+              _quantity?: number
+            }
+            Returns: string
+          }
       wallet_cash_transfer: {
         Args: { _amount: number; _note?: string; _to: string }
+        Returns: number
+      }
+      wallet_cash_transfer_to: {
+        Args: { _amount: number; _note?: string; _recipient: string }
         Returns: number
       }
       wallet_credit: {
@@ -1204,12 +1630,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1233,11 +1659,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1258,11 +1684,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1283,11 +1709,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1300,11 +1726,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
