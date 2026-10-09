@@ -23,7 +23,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-8">
+    <div className="min-h-screen bg-background pb-20 lg:pb-8">
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-lg">
         <OfflineBanner />
         <div className="mx-auto flex w-full max-w-[1328px] items-center justify-between gap-4 px-4 lg:px-10 py-2.5">

@@ -150,12 +150,12 @@ const Index = () => {
           Your campus, curated.
         </h1>
         <p className="mt-4 max-w-xl text-foreground/85 text-[13px] leading-relaxed">
-          A private marketplace, community and social club for students.<br className="hidden sm:block" />
+          A private marketplace, community and social club for students.{" "}<br className="hidden sm:block" />
           Real people. Fresh finds. A little closer to home.
         </p>
 
         <div className="relative mt-6 max-w-[490px]">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="pointer-events-none absolute z-10 left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -298,8 +298,8 @@ const Index = () => {
           <AddListingDialog onCreated={load} trigger={<Button size="lg" className="rounded-full h-14 w-14 p-0 gradient-accent shadow-glow"><span className="text-2xl leading-none">+</span></Button>} />
         </div>
       ) : (
-        <div className="fixed bottom-24 right-4 z-40">
-          <Link to="/auth"><Button size="lg" className="rounded-full gradient-accent shadow-glow">Sign up / Log in</Button></Link>
+        <div className="flex justify-center py-6">
+          <Button asChild size="lg" variant="outline" className="border-accent/40 text-accent"><Link to="/auth">Sign up / Log in <ArrowRight /></Link></Button>
         </div>
       )}
     </AppShell>
